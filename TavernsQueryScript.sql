@@ -72,7 +72,7 @@ GO
 5. Write a function that returns a report of all open rooms (not used) on a particular day (input) and 
 which tavern they belong to 
 */
---new rooms table for this assignment (assuming all these types but 1Qty are in every tavern)
+--new rooms table for this assignment (assuming all these types with 1Qty are in every tavern)
 DROP TABLE IF EXISTS [roomType];
 
 CREATE TABLE [roomType] (
@@ -112,7 +112,7 @@ VALUES (1, 5, '01/03/2021','01/07/2021'),
 (7, 5, '01/03/2021','01/07/2021');
 
 --Function to return all open (available) rooms on a particular day
---Cross Join all roomTypes and Taverns
+--Cross Join all roomTypes and Taverns so all roomTypes are in every tavern
 IF OBJECT_ID (N'OpenRooms', N'IF') IS NOT NULL
 	DROP FUNCTION openRooms;
 GO
@@ -169,3 +169,15 @@ GO
 7. Write a command that uses the result from 6 to Create a Room in another tavern that undercuts (is less than) 
 the cheapest room by a penny - thereby making the new room the cheapest one
 */
+
+DROP TABLE IF EXISTS [newRooms];
+SELECT * INTO [newRooms] FROM (SELECT * FROM openRoomsByPrice('01/07/2021', $170, $900)) AS temp
+GO
+DECLARE @minRate MONEY, @minTavernName VARCHAR(250), @randomTavernName VARCHAR(250), @roomName VARCHAR(250)
+SELECT TOP 1 @minRate = rate, @minTavernName = tavernName, @roomName = roomName from [newRooms] order by rate asc
+SELECT TOP 1 @randomTavernName = tavernName FROM [newRooms] WHERE tavernName <> @minTavernName ORDER BY NEWID()
+INSERT INTO [newRooms] (tavernName, roomName, rate)
+VALUES (@randomTavernName, @roomName, @minrate-$0.01);
+GO
+SELECT * FROM [newRooms] ORDER BY rate ASC
+GO
